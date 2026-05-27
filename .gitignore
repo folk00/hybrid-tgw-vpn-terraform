@@ -1,0 +1,35 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl.backup
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+
+# Never commit real variable files - only commit *.tfvars.example
+*.tfvars
+!*.tfvars.example
+
+# Build artifacts
+terraform/lambda_package.zip
+
+# Secrets / local env
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+credentials
+aws-credentials*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

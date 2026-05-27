@@ -1,0 +1,24 @@
+aws_region  = "us-east-1"
+environment = "dev"
+
+# Leave vpn_sites empty for the low-cost serverless/VPC-endpoint lab.
+# Add real customer gateway public IPs to create real TGW Site-to-Site VPNs.
+#
+# IMPORTANT:
+# - Creating TGW and VPN resources can generate hourly cost.
+# - customer_gateway_ip must be the real public IP of your router/firewall/SD-WAN edge.
+# - For BGP VPNs, use static_routes_only = false and set bgp_asn.
+# - For static-route VPNs, use static_routes_only = true and list remote_cidrs.
+
+vpn_sites = {
+  branch01 = {
+    customer_gateway_ip = "REPLACE_WITH_BRANCH_PUBLIC_IP"
+    bgp_asn             = 65010
+    remote_cidrs        = ["10.10.0.0/16"]
+    static_routes_only  = false
+
+    # Optional. AWS can auto-assign tunnel inside CIDRs if omitted.
+    # tunnel1_inside_cidr = "169.254.10.0/30"
+    # tunnel2_inside_cidr = "169.254.11.0/30"
+  }
+}

@@ -1,0 +1,23 @@
+# Cisco C8000V / CSR1000V Customer Gateway variant.
+# Keep this file as an example. Put real AMI IDs, keys, passwords, and source IPs
+# in a local tfvars file that you do not commit.
+
+aws_region                    = "us-east-1"
+enable_cisco_customer_gateway = true
+
+# Use a Cisco Marketplace AMI that your AWS account has subscribed to.
+# Example shape: ami-0123456789abcdef0
+cisco_customer_gateway_ami_id = "REPLACE_WITH_CISCO_MARKETPLACE_AMI"
+
+# Use an existing EC2 key pair if you want SSH access to the IOS XE console.
+cisco_customer_gateway_key_name = "REPLACE_WITH_KEY_PAIR_NAME"
+
+# Restrict SSH to your current public IP when testing.
+cisco_customer_gateway_ssh_cidrs = ["REPLACE_WITH_YOUR_PUBLIC_IP/32"]
+
+cisco_customer_gateway_admin_username = "labadmin"
+cisco_customer_gateway_admin_password = "REPLACE_WITH_STRONG_PASSWORD"
+
+cisco_customer_gateway_remote_cidr   = "172.16.20.0/24"
+cisco_customer_gateway_bgp_asn       = 65020
+cisco_customer_gateway_instance_type = "c5.large"
