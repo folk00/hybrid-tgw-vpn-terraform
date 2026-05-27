@@ -55,7 +55,7 @@ It also doubles as my **ANS-C01 portfolio artifact** — the Terraform maps 1:1 
 ```
 
 **Key design choices:**
-- **No NAT Gateway** by default — Lambda reaches S3/DDB via **Gateway VPC Endpoints** (ANS-C01 favorite).
+- **No NAT Gateway** by default — Lambda reaches S3/DDB via **Gateway VPC Endpoints**.
 - **TGW** instead of plain VPN-to-VGW — scales to multi-VPC and Direct Connect later.
 - **Both CGW paths reuse the same TGW/VPN module** — swap by flipping a variable, no duplicate infra.
 - **Cost-gated**: TGW, VPN, c8000v all disabled by default. Plan-only mode lets you read the resource graph before paying.
@@ -174,11 +174,9 @@ terraform destroy
 
 Full map in [`docs/ans_c01_mapping.md`](docs/ans_c01_mapping.md).
 
-## Why this fits my profile
+## About
 
-Senior Network Engineer at Cisco PS — 15+ years across LAN/WAN/DC, SD-WAN, BGP/OSPF, VRF, IPSec. Transitioning into cloud networking. This repo demonstrates that the on-prem skill set translates directly: TGW is a route-leaking VRF fabric, S2S VPN is IKEv2/IPSec, BGP is BGP. Same primitives, AWS-native control plane.
-
-Holds **AWS Advanced Networking – Specialty (ANS-C01)**, passed 2026-05-25.
+Built by a Cisco network engineer moving into cloud. AWS Advanced Networking – Specialty (ANS-C01), 2026.
 
 ## License
 
