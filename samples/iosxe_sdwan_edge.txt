@@ -1,0 +1,31 @@
+hostname retail-branch-edge-01
+!
+interface GigabitEthernet0/0/0
+ description MPLS transport
+ ip address 10.10.10.2 255.255.255.252
+ no shutdown
+!
+interface GigabitEthernet0/0/1
+ description Internet transport
+ ip address dhcp
+ no shutdown
+!
+interface Tunnel0
+ description SD-WAN IPsec overlay
+ tunnel source GigabitEthernet0/0/1
+ tunnel mode ipsec ipv4
+!
+router bgp 65010
+ neighbor 10.10.10.1 remote-as 64512
+ address-family ipv4
+  network 10.42.10.0 mask 255.255.255.0
+!
+sdwan
+ system-ip 10.255.10.1
+ site-id 101
+ organization-name RETAIL-CO
+ vbond 198.51.100.10
+!
+omp
+ advertise connected
+ advertise static

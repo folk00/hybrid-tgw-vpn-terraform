@@ -1,0 +1,89 @@
+Section: IOS configuration
+hostname ${hostname}
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no ip domain lookup
+ip domain name hybridnet.lab
+username ${admin_username} privilege 15 secret 0 ${admin_password}
+ip ssh version 2
+crypto key generate rsa modulus 2048
+!
+interface GigabitEthernet1
+ description AWS outside interface - public subnet with Elastic IP NAT
+ ip address dhcp
+ no shutdown
+!
+interface Loopback10
+ description Simulated branch LAN advertised to AWS
+ ip address ${branch_ip} ${branch_mask}
+!
+crypto ikev2 proposal AWS-IKEV2-PROPOSAL
+ encryption aes-cbc-256
+ integrity sha256
+ group 14
+!
+crypto ikev2 policy AWS-IKEV2-POLICY
+ proposal AWS-IKEV2-PROPOSAL
+!
+crypto ikev2 keyring AWS-IKEV2-KEYRING
+ peer AWS-TUNNEL-1
+  address ${tunnel1_address}
+  pre-shared-key ${tunnel1_preshared_key}
+ peer AWS-TUNNEL-2
+  address ${tunnel2_address}
+  pre-shared-key ${tunnel2_preshared_key}
+!
+crypto ikev2 profile AWS-IKEV2-PROFILE
+ match identity remote address ${tunnel1_address} 255.255.255.255
+ match identity remote address ${tunnel2_address} 255.255.255.255
+ identity local address ${customer_gateway_ip}
+ authentication remote pre-share
+ authentication local pre-share
+ keyring local AWS-IKEV2-KEYRING
+!
+crypto ipsec transform-set AWS-IPSEC-TS esp-aes 256 esp-sha256-hmac
+ mode tunnel
+!
+crypto ipsec profile AWS-IPSEC-PROFILE
+ set transform-set AWS-IPSEC-TS
+ set pfs group14
+ set ikev2-profile AWS-IKEV2-PROFILE
+!
+interface Tunnel1
+ description AWS VPN tunnel 1 to ${tunnel1_address}
+ ip address ${tunnel1_cgw_inside_address} ${tunnel1_inside_netmask}
+ ip mtu 1436
+ ip tcp adjust-mss 1379
+ tunnel source GigabitEthernet1
+ tunnel mode ipsec ipv4
+ tunnel destination ${tunnel1_address}
+ tunnel protection ipsec profile AWS-IPSEC-PROFILE
+ no shutdown
+!
+interface Tunnel2
+ description AWS VPN tunnel 2 to ${tunnel2_address}
+ ip address ${tunnel2_cgw_inside_address} ${tunnel2_inside_netmask}
+ ip mtu 1436
+ ip tcp adjust-mss 1379
+ tunnel source GigabitEthernet1
+ tunnel mode ipsec ipv4
+ tunnel destination ${tunnel2_address}
+ tunnel protection ipsec profile AWS-IPSEC-PROFILE
+ no shutdown
+!
+router bgp ${bgp_asn}
+ bgp log-neighbor-changes
+ neighbor ${tunnel1_vgw_inside_address} remote-as ${tunnel1_aws_bgp_asn}
+ neighbor ${tunnel2_vgw_inside_address} remote-as ${tunnel2_aws_bgp_asn}
+ !
+ address-family ipv4
+  network ${branch_network} mask ${branch_mask}
+  neighbor ${tunnel1_vgw_inside_address} activate
+  neighbor ${tunnel2_vgw_inside_address} activate
+ exit-address-family
+!
+line vty 0 4
+ login local
+ transport input ssh
+!
+end

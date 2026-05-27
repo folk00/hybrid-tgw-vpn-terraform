@@ -1,0 +1,51 @@
+#!/bin/bash
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -y
+apt-get install -y curl unzip strongswan iproute2 procps
+
+if ! command -v aws >/dev/null 2>&1; then
+  curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+  rm -rf /tmp/aws
+  unzip -q /tmp/awscliv2.zip -d /tmp
+  /tmp/aws/install
+fi
+
+cat >/etc/sysctl.d/99-hybridnet-cgw.conf <<'EOF'
+net.ipv4.ip_forward = 1
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.conf.all.rp_filter = 0
+net.ipv4.conf.default.rp_filter = 0
+EOF
+sysctl --system
+
+mkdir -p /opt/hybridnet
+
+cat >/opt/hybridnet/pull-vpn-config.sh <<'EOF'
+#!/bin/bash
+set -euo pipefail
+
+for attempt in $(seq 1 120); do
+  if aws ssm get-parameter \
+    --region "${aws_region}" \
+    --name "${parameter_name}" \
+    --with-decryption \
+    --query 'Parameter.Value' \
+    --output text > /opt/hybridnet/apply-vpn-config.sh; then
+    chmod 700 /opt/hybridnet/apply-vpn-config.sh
+    bash /opt/hybridnet/apply-vpn-config.sh
+    exit 0
+  fi
+  sleep 30
+done
+
+echo "Timed out waiting for ${parameter_name}" >&2
+exit 1
+EOF
+
+chmod 700 /opt/hybridnet/pull-vpn-config.sh
+nohup /opt/hybridnet/pull-vpn-config.sh >/var/log/hybridnet-cgw-bootstrap.log 2>&1 &

@@ -1,0 +1,52 @@
+#!/bin/bash
+set -euo pipefail
+
+ip link show branch0 >/dev/null 2>&1 || ip link add branch0 type dummy
+ip addr show dev branch0 | grep -q "${branch_ip_cidr}" || ip addr add "${branch_ip_cidr}" dev branch0
+ip link set branch0 up
+
+mkdir -p /etc/strongswan
+
+cat >/etc/ipsec.conf <<'EOF'
+config setup
+  uniqueids=no
+  charondebug="ike 1, knl 1, cfg 0"
+
+conn %default
+  type=tunnel
+  authby=psk
+  keyexchange=ikev2
+  ike=aes256-sha256-modp2048,aes256-sha1-modp1024
+  esp=aes256-sha256-modp2048,aes256-sha1-modp1024
+  ikelifetime=28800s
+  lifetime=3600s
+  keyingtries=%forever
+  dpddelay=10s
+  dpdtimeout=30s
+  dpdaction=restart
+  left=%defaultroute
+  leftid=${customer_gateway_ip}
+  leftsubnet=${local_branch_cidr}
+  rightsubnet=${remote_aws_vpc_cidr}
+  auto=start
+
+conn aws-tunnel-1
+  right=${tunnel1_address}
+
+conn aws-tunnel-2
+  right=${tunnel2_address}
+EOF
+
+cat >/etc/ipsec.secrets <<'EOF'
+${customer_gateway_ip} ${tunnel1_address} : PSK "${tunnel1_preshared_key}"
+${customer_gateway_ip} ${tunnel2_address} : PSK "${tunnel2_preshared_key}"
+EOF
+
+chmod 600 /etc/ipsec.secrets
+
+systemctl enable strongswan || true
+systemctl restart strongswan-starter || systemctl restart strongswan || ipsec restart || true
+
+sleep 10
+ipsec statusall >/opt/hybridnet/ipsec-status.txt 2>&1 || true
+ip addr show branch0 >/opt/hybridnet/branch0.txt 2>&1 || true
