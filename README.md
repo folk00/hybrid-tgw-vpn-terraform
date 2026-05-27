@@ -1,236 +1,185 @@
-# HybridNet ANS-C01 Lab
+# Hybrid TGW + Site-to-Site VPN (Terraform)
 
-Terraform-deployable AWS networking lab plus a small Network Change Intelligence API.
+Terraform-deployable AWS Advanced Networking lab demonstrating **hybrid connectivity** between an AWS VPC and an on-prem/branch site over **Transit Gateway + Site-to-Site VPN**, with **two interchangeable Customer Gateway implementations**:
 
-This project is designed to show AWS Advanced Networking concepts in a practical
-network-automation context: private VPC design, gateway endpoints, S3, DynamoDB,
-CloudWatch observability, IAM least privilege, API Gateway, Lambda, optional
-Transit Gateway scaffolding, and network/MOP artifact analysis.
+- **Linux EC2 + strongSwan + FRR** — low-cost emulated CGW for validation
+- **Cisco c8000v (IOS XE)** — production-grade CGW with BGP over both tunnels
 
-## What This Demonstrates
+> Public lab/demo. No production data, credentials, or customer-specific logic. All sample IPs are RFC 5737 / RFC 1918.
 
-- AWS VPC design with isolated private subnets across two AZs
-- S3 Gateway Endpoint and DynamoDB Gateway Endpoint
-- API Gateway front door invoking Lambda
-- Lambda attached to private subnets with no NAT Gateway by default
-- S3 artifact storage with encryption, versioning, lifecycle policy, and public access block
-- DynamoDB audit table for request history
-- CloudWatch log group, structured JSON logs, and metric filter for risk score
-- Optional real Transit Gateway and Site-to-Site VPN lab, disabled by default to avoid cost
-- A small app that analyzes Cisco, SD-WAN, MOP, and AWS hybrid networking text
+---
 
-## Why This Fits My Profile
+## Why this exists
 
-This is not a generic SaaS demo. It is a hybrid network operations lab that
-connects AWS Advanced Networking concepts with real enterprise network change
-workflows:
+Most AWS networking demos stop at "click here to create a VPN." This lab shows the **full hybrid path** the way a network engineer actually has to think about it: who terminates the tunnels, how routes are exchanged, what the failure modes look like, and how to validate cost-aware before going live.
 
-- Cisco SD-WAN, Meraki, Nexus, Catalyst, BGP, OSPF, VRF, VPN
-- AWS TGW, Direct Connect, Site-to-Site VPN, VPC endpoints, DNS and routing
-- MOP review, rollback checks, pre/post validation, auditability
-- Infrastructure as Code with Terraform
+It also doubles as my **ANS-C01 portfolio artifact** — the Terraform maps 1:1 to the exam blueprint (TGW, S2S VPN, BGP/static, VPC endpoints, route tables, monitoring). See [`docs/ans_c01_mapping.md`](docs/ans_c01_mapping.md).
 
 ## Architecture
 
 ```text
-Client / Browser / curl
-        |
-        v
-Amazon API Gateway HTTP API
-        |
-        v
-AWS Lambda - Network Analyzer
-        |
-        |-- writes uploaded artifact to S3
-        |-- writes audit event to DynamoDB
-        |-- writes structured JSON logs to CloudWatch Logs
-        |
-        v
-Private VPC subnets
-        |
-        |-- S3 Gateway VPC Endpoint
-        |-- DynamoDB Gateway VPC Endpoint
+                                  AWS region (us-east-1)
+   ┌──────────────────────────────────────────────────────────────────┐
+   │                                                                  │
+   │   ┌─────────────────────┐         ┌───────────────────────────┐  │
+   │   │     App VPC         │         │     Transit Gateway       │  │
+   │   │  10.0.0.0/16        │ ──attach│   route table + assoc     │  │
+   │   │                     │         └───────────┬───────────────┘  │
+   │   │  private subnets    │                     │                  │
+   │   │  ┌───────────────┐  │                     │                  │
+   │   │  │ Lambda        │  │         ┌───────────▼───────────────┐  │
+   │   │  │ (analyzer)    │  │         │   Site-to-Site VPN        │  │
+   │   │  └───────────────┘  │         │   2 tunnels, IPSec/IKEv2  │  │
+   │   │                     │         └───────────┬───────────────┘  │
+   │   │  S3 GW endpoint     │                     │                  │
+   │   │  DDB GW endpoint    │                     │                  │
+   │   └─────────────────────┘                     │                  │
+   │                                               │                  │
+   └───────────────────────────────────────────────┼──────────────────┘
+                                                   │
+                          ┌────────────────────────┴────────────────────────┐
+                          │                                                 │
+                          │  Two interchangeable Customer Gateways          │
+                          │                                                 │
+       ┌──────────────────▼────────────────────┐   ┌────────────────────────▼──────────────────┐
+       │  Path A: Emulated CGW (low-cost)      │   │  Path B: Cisco CGW (production-grade)     │
+       │                                       │   │                                           │
+       │  Linux EC2 t3.micro + EIP             │   │  Cisco c8000v IOS XE + EIP                │
+       │  ├─ strongSwan (IPSec/IKEv2)          │   │  ├─ crypto ikev2 + ipsec profile          │
+       │  ├─ FRR (BGP optional)                │   │  ├─ BGP over Tunnel1 + Tunnel2            │
+       │  ├─ Day-0 user_data bootstrap         │   │  ├─ Day-0 IOS config via tftpl            │
+       │  └─ Branch CIDR 172.16.10.0/24        │   │  └─ Marketplace AMI (subscription)        │
+       │                                       │   │                                           │
+       │  ~$8/mo idle, no licenses             │   │  ~hourly Cisco license + EC2              │
+       └───────────────────────────────────────┘   └───────────────────────────────────────────┘
 ```
 
-No NAT Gateway is created by default. The Lambda function reaches S3 and
-DynamoDB through VPC Gateway Endpoints, which is a key ANS-C01 concept.
+**Key design choices:**
+- **No NAT Gateway** by default — Lambda reaches S3/DDB via **Gateway VPC Endpoints** (ANS-C01 favorite).
+- **TGW** instead of plain VPN-to-VGW — scales to multi-VPC and Direct Connect later.
+- **Both CGW paths reuse the same TGW/VPN module** — swap by flipping a variable, no duplicate infra.
+- **Cost-gated**: TGW, VPN, c8000v all disabled by default. Plan-only mode lets you read the resource graph before paying.
 
-## Folder Layout
+## Repo layout
 
-```text
-app/
-  lambda_function.py        # deployable app
-samples/
-  iosxe_sdwan_edge.txt      # network sample
-  aws_tgw_plan.md           # AWS hybrid networking sample
-  mop_risky_change.md       # MOP/risk sample
-scripts/
-  local_invoke.py           # local test without AWS
-  deploy.ps1                # Terraform helper
-  destroy.ps1               # Terraform helper
-terraform/
-  versions.tf
-  variables.tf
-  main.tf
-  outputs.tf
-docs/
-  ans_c01_mapping.md
-  architecture.md
+```
+hybrid-tgw-vpn-terraform/
+├── terraform/
+│   ├── main.tf                              # VPC, endpoints, Lambda, API GW, S3, DDB
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── versions.tf
+│   ├── emulated_cgw.tf                      # Path A: Linux + strongSwan EC2 CGW
+│   ├── cisco_cgw.tf                         # Path B: Cisco c8000v CGW
+│   ├── templates/
+│   │   ├── emulated_cgw_bootstrap.sh.tftpl  # strongSwan + FRR install + cfg
+│   │   ├── emulated_cgw_config.sh.tftpl     # tunnel/BGP runtime config
+│   │   └── cisco_cgw_day0_config.tftpl      # IOS XE Day-0 config
+│   ├── terraform.tfvars.example             # safe template, no secrets
+│   ├── cisco-cgw.tfvars.example             # safe template for Cisco path
+│   └── *.tfvars                             # gitignored — real values live here
+├── app/
+│   └── lambda_function.py                   # Network Change Intelligence analyzer
+├── scripts/
+│   ├── deploy.ps1 / destroy.ps1             # Terraform wrappers
+│   ├── local_invoke.py                      # test Lambda without AWS
+│   └── serve_local.py                       # local HTTP front for the analyzer
+├── samples/
+│   ├── iosxe_sdwan_edge.txt                 # Cisco IOS XE sample
+│   ├── aws_tgw_plan.md                      # AWS hybrid sample
+│   └── mop_risky_change.md                  # MOP/risk sample
+└── docs/
+    ├── architecture.md
+    ├── ans_c01_mapping.md                   # ANS-C01 domain ↔ resource map
+    ├── tgw_vpn_lab.md
+    ├── emulated_customer_gateway.md         # Linux strongSwan deep-dive
+    ├── cisco_c8000v_customer_gateway.md     # c8000v deep-dive
+    └── cost_estimate.md
 ```
 
-## Local Test
+## Quick start
+
+### 1. Plan only (no AWS spend)
 
 ```powershell
-cd "C:\Users\davidgo2\Downloads\New`Project"
-python .\scripts\local_invoke.py .\samples\mop_risky_change.md
-```
-
-The local test does not call AWS. It imports the Lambda handler and prints the
-same JSON response the cloud API would return.
-
-## Deploy
-
-Prereqs:
-
-- AWS CLI configured with a profile that can create VPC, Lambda, API Gateway,
-  S3, DynamoDB, IAM, and CloudWatch resources
-- Terraform installed
-
-```powershell
-cd "C:\Users\davidgo2\Downloads\New`Project\terraform"
+cd terraform
 terraform init
-terraform plan -out tfplan
-terraform apply tfplan
-```
-
-Or use:
-
-```powershell
-.\scripts\deploy.ps1
-```
-
-The default region is `us-east-1`. Override it with:
-
-```powershell
-terraform plan -var "aws_region=us-east-2"
-```
-
-## Plan TGW/VPN Without Applying
-
-There is also a reproducible plan-only demo for the hybrid path:
-
-```powershell
-cd "C:\Users\davidgo2\Downloads\New`Project\terraform"
 terraform plan -var-file .\vpn.demo.tfvars -out hybrid-demo.tfplan
 ```
 
-That file uses a documentation IP address so Terraform can show the TGW and
-VPN resources in the plan. Do not apply it as-is. Replace
-`customer_gateway_ip`, `bgp_asn`, and `remote_cidrs` with real branch values
-before creating a live VPN.
+Reads as if you were deploying. Uses RFC 5737 docs IP — safe to plan, not safe to apply.
 
-## Enable Real TGW Site-to-Site VPN
-
-By default, no TGW or VPN resources are created. To create a real hybrid
-connectivity lab, copy the example variables file:
+### 2. Path A — Emulated CGW (Linux + strongSwan)
 
 ```powershell
-cd "C:\Users\davidgo2\Downloads\New`Project\terraform"
-Copy-Item .\terraform.tfvars.example .\terraform.tfvars
-```
-
-Edit `terraform.tfvars` and replace:
-
-```hcl
-customer_gateway_ip = "REPLACE_WITH_BRANCH_PUBLIC_IP"
-```
-
-with the public IP of your router, firewall, or SD-WAN edge.
-
-When `vpn_sites` is non-empty, Terraform creates:
-
-- Transit Gateway
-- TGW route table
-- App VPC attachment
-- Customer Gateway
-- Site-to-Site VPN connection
-- TGW association and propagation
-- VPC route-table routes toward remote branch CIDRs
-- Static VPN/TGW routes when `static_routes_only = true`
-
-More details:
-
-```text
-docs/tgw_vpn_lab.md
-```
-
-## Emulated Customer Gateway
-
-For a realistic lab without a physical router, use the included emulated CGW
-mode:
-
-```powershell
-cd "C:\Users\davidgo2\Downloads\New`Project\terraform"
+cd terraform
 terraform plan -var-file .\emulated-cgw.tfvars -out emulated-cgw.tfplan
 terraform apply .\emulated-cgw.tfplan
 ```
 
-This creates an EC2-based branch appliance with an Elastic IP, then uses that
-Elastic IP as the AWS Customer Gateway. See:
+Brings up an EC2 t3.micro, installs strongSwan + FRR via `user_data`, EIPs it, and registers that EIP as the AWS Customer Gateway. Two AWS VPN tunnels come up against the Linux box. Full deep-dive in [`docs/emulated_customer_gateway.md`](docs/emulated_customer_gateway.md).
 
-```text
-docs/emulated_customer_gateway.md
-```
-
-## Cisco Customer Gateway Variant
-
-For a Cisco IOS XE version, use the optional C8000V/CSR1000V-style Customer
-Gateway variant. It keeps the same AWS TGW and Site-to-Site VPN flow, but uses
-BGP over the two AWS VPN tunnels instead of the Linux strongSwan static-route
-example. It is disabled by default because it requires a subscribed Cisco
-Marketplace AMI and higher hourly cost.
-
-```text
-docs/cisco_c8000v_customer_gateway.md
-```
-
-## Test The Deployed API
-
-After `terraform apply`, copy the `api_endpoint` output and run:
+### 3. Path B — Cisco c8000v CGW
 
 ```powershell
-$api = "<api_endpoint>"
-$body = @{
-  tenant_id = "retail-co"
-  artifact_name = "mop_risky_change.md"
-  content = Get-Content "..\samples\mop_risky_change.md" -Raw
-} | ConvertTo-Json -Depth 5
-
-Invoke-RestMethod -Method Post -Uri "$api/analyze" -ContentType "application/json" -Body $body
+cd terraform
+Copy-Item .\cisco-cgw.tfvars.example .\cisco-cgw.tfvars
+# edit cisco-cgw.tfvars: set admin password, AMI, source IP
+terraform plan -var-file .\cisco-cgw.tfvars -out cisco-cgw.tfplan
+terraform apply .\cisco-cgw.tfplan
 ```
 
-## Cost Notes
+Requires Cisco Marketplace subscription for the c8000v AMI. BGP runs over both tunnels. Deep-dive in [`docs/cisco_c8000v_customer_gateway.md`](docs/cisco_c8000v_customer_gateway.md).
 
-Defaults are intentionally cost-aware:
-
-- No NAT Gateway
-- No Transit Gateway unless `enable_tgw_lab = true`
-- No VPN unless `vpn_sites` is non-empty
-- No VPC Flow Logs unless `enable_vpc_flow_logs = true`
-- DynamoDB uses on-demand billing
-- Lambda/API Gateway usage stays tiny for a demo
-
-Destroy when done:
+### 4. Tear down
 
 ```powershell
-cd "C:\Users\davidgo2\Downloads\New`Project\terraform"
+cd terraform
 terraform destroy
 ```
 
-## CV Bullet
+## What gets deployed by default (cost-aware)
 
-Built a Terraform-deployable AWS Advanced Networking lab with private VPC
-subnets, S3/DynamoDB gateway endpoints, API Gateway, Lambda, CloudWatch logs,
-metric filters, optional Transit Gateway and real Site-to-Site VPN connections,
-plus a network change intelligence API for Cisco SD-WAN, MOP and hybrid cloud
-artifact analysis.
+| Component                  | Default | Toggle                                |
+|----------------------------|---------|---------------------------------------|
+| App VPC + subnets          | ✅ on   | always                                |
+| S3 / DynamoDB GW endpoints | ✅ on   | always                                |
+| Lambda + API Gateway       | ✅ on   | always                                |
+| CloudWatch log group       | ✅ on   | always                                |
+| **NAT Gateway**            | ❌ off  | not used — endpoints replace it       |
+| **Transit Gateway**        | ❌ off  | `enable_tgw_lab = true`               |
+| **Site-to-Site VPN**       | ❌ off  | populate `vpn_sites = {...}`          |
+| **Emulated CGW (Linux)**   | ❌ off  | `enable_emulated_customer_gateway`    |
+| **Cisco c8000v CGW**       | ❌ off  | `enable_cisco_customer_gateway`       |
+| VPC Flow Logs              | ❌ off  | `enable_vpc_flow_logs = true`         |
+
+## Tech stack
+
+- **IaC:** Terraform (AWS provider)
+- **Cloud:** AWS VPC, TGW, Site-to-Site VPN, Customer Gateway, EC2, EIP, S3, DynamoDB, Lambda, API Gateway, CloudWatch, IAM
+- **Network OS:** Linux (strongSwan + FRR), Cisco IOS XE (c8000v)
+- **App:** Python 3.11 Lambda (network artifact analyzer)
+- **Local tooling:** PowerShell deploy/destroy scripts, local invoke without AWS
+
+## ANS-C01 mapping
+
+| ANS-C01 domain                               | Where in this repo                                 |
+|----------------------------------------------|----------------------------------------------------|
+| Hybrid connectivity (S2S VPN, TGW)           | `terraform/main.tf`, `emulated_cgw.tf`, `cisco_cgw.tf` |
+| BGP vs static-route VPN                      | `vpn_sites.*.static_routes_only`, `bgp_asn`        |
+| VPC design + endpoints                       | `main.tf` (S3/DDB gateway endpoints, no NAT)       |
+| Monitoring & logging                         | CloudWatch log group, metric filter, optional Flow Logs |
+| Cost optimization                            | Default-off TGW/VPN, endpoint-only egress          |
+| Security                                     | IAM least-privilege, encrypted S3, public-access block |
+
+Full map in [`docs/ans_c01_mapping.md`](docs/ans_c01_mapping.md).
+
+## Why this fits my profile
+
+Senior Network Engineer at Cisco PS — 15+ years across LAN/WAN/DC, SD-WAN, BGP/OSPF, VRF, IPSec. Transitioning into cloud networking. This repo demonstrates that the on-prem skill set translates directly: TGW is a route-leaking VRF fabric, S2S VPN is IKEv2/IPSec, BGP is BGP. Same primitives, AWS-native control plane.
+
+Holds **AWS Advanced Networking – Specialty (ANS-C01)**, passed 2026-05-25.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
