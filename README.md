@@ -176,7 +176,7 @@ Full map in [`docs/ans_c01_mapping.md`](docs/ans_c01_mapping.md).
 
 ## About
 
-Built by a Cisco network engineer moving into cloud. AWS Advanced Networking – Specialty (ANS-C01), 2026.
+Built by a Cisco network engineer. AWS Advanced Networking – Specialty (ANS-C01), 2026.
 
 ## License
 
