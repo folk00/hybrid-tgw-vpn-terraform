@@ -20,7 +20,7 @@ generated values locally for this lab.
 ## Plan
 
 ```powershell
-cd "C:\Users\davidgo2\Downloads\New`Project\terraform"
+cd .\terraform
 terraform plan -var-file .\emulated-cgw.tfvars -out emulated-cgw.tfplan
 ```
 

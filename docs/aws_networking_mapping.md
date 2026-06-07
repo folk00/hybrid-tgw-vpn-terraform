@@ -1,6 +1,6 @@
-# ANS-C01 Concept Mapping
+# AWS Networking Concept Mapping
 
-| ANS-C01 Area | Project Evidence |
+| Area | Project Evidence |
 |---|---|
 | VPC design | Isolated private subnets across two AZs |
 | Routing | Dedicated route table plus gateway endpoint route injection |

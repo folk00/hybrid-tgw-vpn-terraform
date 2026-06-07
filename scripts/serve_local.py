@@ -21,7 +21,7 @@ HTML = """<!doctype html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HybridNet ANS-C01 Lab</title>
+  <title>Hybrid TGW + VPN Lab</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; background: #f6f8fb; color: #172033; }
     header { background: #172033; color: white; padding: 18px 24px; }
@@ -38,7 +38,7 @@ HTML = """<!doctype html>
 </head>
 <body>
   <header>
-    <h1>HybridNet ANS-C01 Lab</h1>
+    <h1>Hybrid TGW + VPN Lab</h1>
     <div>Network change intelligence API - local Lambda simulation</div>
   </header>
   <main>

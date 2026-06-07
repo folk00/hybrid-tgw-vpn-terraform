@@ -2,8 +2,8 @@
 
 ## Purpose
 
-HybridNet ANS-C01 Lab is a deployable AWS networking reference that maps cloud
-networking concepts to a network operations workflow.
+This lab is a deployable AWS networking reference that maps cloud networking
+concepts to a network operations workflow.
 
 The app is intentionally small. The value is the AWS architecture around it:
 private subnets, VPC endpoints, S3, DynamoDB, CloudWatch, IAM, API Gateway and

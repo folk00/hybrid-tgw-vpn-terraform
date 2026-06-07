@@ -13,7 +13,7 @@ Terraform-deployable AWS Advanced Networking lab demonstrating **hybrid connecti
 
 Most AWS networking demos stop at "click here to create a VPN." This lab shows the **full hybrid path** the way a network engineer actually has to think about it: who terminates the tunnels, how routes are exchanged, what the failure modes look like, and how to validate cost-aware before going live.
 
-The Terraform maps 1:1 to AWS Advanced Networking reference architectures (TGW, S2S VPN, BGP/static, VPC endpoints, route tables, monitoring). See [`docs/ans_c01_mapping.md`](docs/ans_c01_mapping.md) for the detailed service mapping.
+The Terraform maps 1:1 to AWS Advanced Networking reference architectures (TGW, S2S VPN, BGP/static, VPC endpoints, route tables, monitoring). See [`docs/aws_networking_mapping.md`](docs/aws_networking_mapping.md) for the detailed service mapping.
 
 ## Architecture
 
@@ -90,7 +90,7 @@ hybrid-tgw-vpn-terraform/
 │   └── mop_risky_change.md                  # MOP/risk sample
 └── docs/
     ├── architecture.md
-    ├── ans_c01_mapping.md                   # ANS-C01 domain ↔ resource map
+│   ├── aws_networking_mapping.md            # AWS networking domain ↔ resource map
     ├── tgw_vpn_lab.md
     ├── emulated_customer_gateway.md         # Linux strongSwan deep-dive
     ├── cisco_c8000v_customer_gateway.md     # c8000v deep-dive
@@ -161,9 +161,9 @@ terraform destroy
 - **App:** Python 3.11 Lambda (network artifact analyzer)
 - **Local tooling:** PowerShell deploy/destroy scripts, local invoke without AWS
 
-## ANS-C01 mapping
+## AWS service mapping
 
-| ANS-C01 domain                               | Where in this repo                                 |
+| Domain                                       | Where in this repo                                 |
 |----------------------------------------------|----------------------------------------------------|
 | Hybrid connectivity (S2S VPN, TGW)           | `terraform/main.tf`, `emulated_cgw.tf`, `cisco_cgw.tf` |
 | BGP vs static-route VPN                      | `vpn_sites.*.static_routes_only`, `bgp_asn`        |
@@ -172,11 +172,7 @@ terraform destroy
 | Cost optimization                            | Default-off TGW/VPN, endpoint-only egress          |
 | Security                                     | IAM least-privilege, encrypted S3, public-access block |
 
-Full map in [`docs/ans_c01_mapping.md`](docs/ans_c01_mapping.md).
-
-## About
-
-Built by a Cisco network engineer. AWS Advanced Networking – Specialty (ANS-C01), 2026.
+Full map in [`docs/aws_networking_mapping.md`](docs/aws_networking_mapping.md).
 
 ## License
 

@@ -9,7 +9,7 @@ variables to enable the full hybrid connectivity path.
 For a safe preview, run the included demo variables file:
 
 ```powershell
-cd "C:\Users\davidgo2\Downloads\New`Project\terraform"
+cd .\terraform
 terraform plan -var-file .\vpn.demo.tfvars -out hybrid-demo.tfplan
 ```
 
@@ -38,7 +38,7 @@ details are replaced with real values.
 Copy the example file:
 
 ```powershell
-cd "C:\Users\davidgo2\Downloads\New`Project\terraform"
+cd .\terraform
 Copy-Item .\terraform.tfvars.example .\terraform.tfvars
 ```
 

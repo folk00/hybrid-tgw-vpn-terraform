@@ -104,7 +104,7 @@ output "cisco_customer_gateway" {
   } : null
 }
 
-output "ans_c01_concepts" {
+output "lab_concepts" {
   description = "Concepts demonstrated by this lab."
   value = [
     "VPC private subnets",

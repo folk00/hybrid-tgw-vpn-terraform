@@ -39,10 +39,10 @@ reference lab.
 Destroy the lab when finished:
 
 ```powershell
-cd "C:\Users\davidgo2\Downloads\New`Project\terraform"
+cd .\terraform
 terraform destroy -var-file .\emulated-cgw.tfvars
 ```
 
-Important resources to confirm gone: `vpn-03b5f780fe72ee12a`,
-`tgw-010787c106f32f71c`, `i-0459c78a89215be27`, and the Elastic IP
-`54.85.251.230`.
+After `terraform destroy` completes, confirm in the AWS console that no
+VPN connection, Transit Gateway, EC2 instance, or Elastic IP from this lab
+remains in your account.
