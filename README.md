@@ -13,7 +13,7 @@ Terraform-deployable AWS Advanced Networking lab demonstrating **hybrid connecti
 
 Most AWS networking demos stop at "click here to create a VPN." This lab shows the **full hybrid path** the way a network engineer actually has to think about it: who terminates the tunnels, how routes are exchanged, what the failure modes look like, and how to validate cost-aware before going live.
 
-It also doubles as my **ANS-C01 reference** — the Terraform maps 1:1 to the exam blueprint (TGW, S2S VPN, BGP/static, VPC endpoints, route tables, monitoring). See [`docs/ans_c01_mapping.md`](docs/ans_c01_mapping.md).
+The Terraform maps 1:1 to AWS Advanced Networking reference architectures (TGW, S2S VPN, BGP/static, VPC endpoints, route tables, monitoring). See [`docs/ans_c01_mapping.md`](docs/ans_c01_mapping.md) for the detailed service mapping.
 
 ## Architecture
 

@@ -13,12 +13,11 @@
 | SD-WAN/cloud integration | Samples and analyzer detect SD-WAN, OMP, VPN, TGW and route table risks |
 | Operations | MOP risk checks, rollback/pre-check/post-check validation |
 
-## design highlights
+## Design Highlights
 
 - The Lambda is private and does not require NAT for AWS service access.
 - S3 and DynamoDB access is through Gateway VPC Endpoints.
-- The app stores artifacts under tenant-scoped S3 prefixes and tenant partition
-  keys in DynamoDB.
+- Tenant isolation is enforced via S3 prefixes and DynamoDB partition keys.
 - CloudWatch receives structured JSON events, and a metric filter turns risk
   scores into a metric.
 - Optional TGW/VPN is disabled by default to control cost. When `vpn_sites` is

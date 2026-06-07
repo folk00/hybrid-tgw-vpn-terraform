@@ -30,8 +30,8 @@ DynamoDB partition key: tenant_id
 DynamoDB sort key: created_at#request_id
 ```
 
-It is not full SaaS auth. It demonstrates the isolation pattern in a way that is
-easy to explain in an demos.
+It is not full SaaS auth. It demonstrates a clean tenant isolation pattern
+suitable for operational documentation and code review.
 
 ## Why No NAT Gateway By Default
 
