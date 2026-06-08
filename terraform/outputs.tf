@@ -94,13 +94,13 @@ output "emulated_customer_gateway" {
 output "cisco_customer_gateway" {
   description = "Details for the optional Cisco C8000V Customer Gateway appliance."
   value = var.enable_cisco_customer_gateway ? {
-    instance_id        = aws_instance.cisco_cgw[0].id
-    public_ip          = aws_eip.cisco_cgw[0].public_ip
-    branch_cidr        = var.cisco_customer_gateway_remote_cidr
-    branch_interface   = "${local.cisco_cgw_branch_ip}/${split("/", var.cisco_customer_gateway_remote_cidr)[1]}"
-    bgp_asn            = var.cisco_customer_gateway_bgp_asn
-    day0_parameter     = aws_ssm_parameter.cisco_cgw_day0_config[0].name
-    ssh_hint           = "ssh -i <key.pem> ec2-user@${aws_eip.cisco_cgw[0].public_ip}"
+    instance_id      = aws_instance.cisco_cgw[0].id
+    public_ip        = aws_eip.cisco_cgw[0].public_ip
+    branch_cidr      = var.cisco_customer_gateway_remote_cidr
+    branch_interface = "${local.cisco_cgw_branch_ip}/${split("/", var.cisco_customer_gateway_remote_cidr)[1]}"
+    bgp_asn          = var.cisco_customer_gateway_bgp_asn
+    day0_parameter   = aws_ssm_parameter.cisco_cgw_day0_config[0].name
+    ssh_hint         = "ssh -i <key.pem> ec2-user@${aws_eip.cisco_cgw[0].public_ip}"
   } : null
 }
 

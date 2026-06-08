@@ -1,8 +1,8 @@
 locals {
   cisco_cgw_day0_parameter_name = "/${var.project_name}/${var.environment}/cisco-cgw/day0-config"
-  cisco_cgw_branch_ip          = cidrhost(var.cisco_customer_gateway_remote_cidr, 1)
-  cisco_cgw_branch_mask        = cidrnetmask(var.cisco_customer_gateway_remote_cidr)
-  cisco_cgw_branch_network     = cidrhost(var.cisco_customer_gateway_remote_cidr, 0)
+  cisco_cgw_branch_ip           = cidrhost(var.cisco_customer_gateway_remote_cidr, 1)
+  cisco_cgw_branch_mask         = cidrnetmask(var.cisco_customer_gateway_remote_cidr)
+  cisco_cgw_branch_network      = cidrhost(var.cisco_customer_gateway_remote_cidr, 0)
 }
 
 resource "aws_vpc" "cisco_cgw" {
@@ -134,27 +134,27 @@ resource "aws_instance" "cisco_cgw" {
   user_data_replace_on_change = true
 
   user_data = templatefile("${path.module}/templates/cisco_cgw_day0_config.tftpl", {
-    hostname                    = "${local.name_prefix}-c8000v"
-    admin_username              = var.cisco_customer_gateway_admin_username
-    admin_password              = var.cisco_customer_gateway_admin_password
-    branch_ip                   = local.cisco_cgw_branch_ip
-    branch_mask                 = local.cisco_cgw_branch_mask
-    branch_network              = local.cisco_cgw_branch_network
-    customer_gateway_ip         = aws_eip.cisco_cgw[0].public_ip
-    bgp_asn                     = var.cisco_customer_gateway_bgp_asn
-    tunnel1_address             = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_address
-    tunnel1_cgw_inside_address  = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_cgw_inside_address
-    tunnel1_vgw_inside_address  = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_vgw_inside_address
-    tunnel1_inside_netmask      = cidrnetmask(aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_inside_cidr)
-    tunnel1_preshared_key       = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_preshared_key
-    tunnel1_aws_bgp_asn         = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_bgp_asn
-    tunnel2_address             = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_address
-    tunnel2_cgw_inside_address  = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_cgw_inside_address
-    tunnel2_vgw_inside_address  = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_vgw_inside_address
-    tunnel2_inside_netmask      = cidrnetmask(aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_inside_cidr)
-    tunnel2_preshared_key       = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_preshared_key
-    tunnel2_aws_bgp_asn         = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_bgp_asn
-    remote_aws_vpc_cidr         = var.vpc_cidr
+    hostname                   = "${local.name_prefix}-c8000v"
+    admin_username             = var.cisco_customer_gateway_admin_username
+    admin_password             = var.cisco_customer_gateway_admin_password
+    branch_ip                  = local.cisco_cgw_branch_ip
+    branch_mask                = local.cisco_cgw_branch_mask
+    branch_network             = local.cisco_cgw_branch_network
+    customer_gateway_ip        = aws_eip.cisco_cgw[0].public_ip
+    bgp_asn                    = var.cisco_customer_gateway_bgp_asn
+    tunnel1_address            = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_address
+    tunnel1_cgw_inside_address = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_cgw_inside_address
+    tunnel1_vgw_inside_address = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_vgw_inside_address
+    tunnel1_inside_netmask     = cidrnetmask(aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_inside_cidr)
+    tunnel1_preshared_key      = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_preshared_key
+    tunnel1_aws_bgp_asn        = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_bgp_asn
+    tunnel2_address            = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_address
+    tunnel2_cgw_inside_address = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_cgw_inside_address
+    tunnel2_vgw_inside_address = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_vgw_inside_address
+    tunnel2_inside_netmask     = cidrnetmask(aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_inside_cidr)
+    tunnel2_preshared_key      = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_preshared_key
+    tunnel2_aws_bgp_asn        = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_bgp_asn
+    remote_aws_vpc_cidr        = var.vpc_cidr
   })
 
   tags = {
@@ -177,27 +177,27 @@ resource "aws_ssm_parameter" "cisco_cgw_day0_config" {
   description = "Generated Cisco IOS XE Day 0 configuration for the C8000V Customer Gateway lab."
   type        = "SecureString"
   value = templatefile("${path.module}/templates/cisco_cgw_day0_config.tftpl", {
-    hostname                    = "${local.name_prefix}-c8000v"
-    admin_username              = var.cisco_customer_gateway_admin_username
-    admin_password              = var.cisco_customer_gateway_admin_password
-    branch_ip                   = local.cisco_cgw_branch_ip
-    branch_mask                 = local.cisco_cgw_branch_mask
-    branch_network              = local.cisco_cgw_branch_network
-    customer_gateway_ip         = aws_eip.cisco_cgw[0].public_ip
-    bgp_asn                     = var.cisco_customer_gateway_bgp_asn
-    tunnel1_address             = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_address
-    tunnel1_cgw_inside_address  = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_cgw_inside_address
-    tunnel1_vgw_inside_address  = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_vgw_inside_address
-    tunnel1_inside_netmask      = cidrnetmask(aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_inside_cidr)
-    tunnel1_preshared_key       = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_preshared_key
-    tunnel1_aws_bgp_asn         = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_bgp_asn
-    tunnel2_address             = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_address
-    tunnel2_cgw_inside_address  = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_cgw_inside_address
-    tunnel2_vgw_inside_address  = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_vgw_inside_address
-    tunnel2_inside_netmask      = cidrnetmask(aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_inside_cidr)
-    tunnel2_preshared_key       = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_preshared_key
-    tunnel2_aws_bgp_asn         = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_bgp_asn
-    remote_aws_vpc_cidr         = var.vpc_cidr
+    hostname                   = "${local.name_prefix}-c8000v"
+    admin_username             = var.cisco_customer_gateway_admin_username
+    admin_password             = var.cisco_customer_gateway_admin_password
+    branch_ip                  = local.cisco_cgw_branch_ip
+    branch_mask                = local.cisco_cgw_branch_mask
+    branch_network             = local.cisco_cgw_branch_network
+    customer_gateway_ip        = aws_eip.cisco_cgw[0].public_ip
+    bgp_asn                    = var.cisco_customer_gateway_bgp_asn
+    tunnel1_address            = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_address
+    tunnel1_cgw_inside_address = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_cgw_inside_address
+    tunnel1_vgw_inside_address = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_vgw_inside_address
+    tunnel1_inside_netmask     = cidrnetmask(aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_inside_cidr)
+    tunnel1_preshared_key      = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_preshared_key
+    tunnel1_aws_bgp_asn        = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel1_bgp_asn
+    tunnel2_address            = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_address
+    tunnel2_cgw_inside_address = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_cgw_inside_address
+    tunnel2_vgw_inside_address = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_vgw_inside_address
+    tunnel2_inside_netmask     = cidrnetmask(aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_inside_cidr)
+    tunnel2_preshared_key      = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_preshared_key
+    tunnel2_aws_bgp_asn        = aws_vpn_connection.site[var.cisco_customer_gateway_site_name].tunnel2_bgp_asn
+    remote_aws_vpc_cidr        = var.vpc_cidr
   })
 
   tags = {
