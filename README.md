@@ -1,5 +1,7 @@
 # Hybrid TGW + Site-to-Site VPN (Terraform)
 
+[![CI](https://github.com/folk00/hybrid-tgw-vpn-terraform/actions/workflows/ci.yml/badge.svg)](https://github.com/folk00/hybrid-tgw-vpn-terraform/actions/workflows/ci.yml)
+
 Terraform-deployable AWS Advanced Networking lab demonstrating **hybrid connectivity** between an AWS VPC and an on-prem/branch site over **Transit Gateway + Site-to-Site VPN**, with **two interchangeable Customer Gateway implementations**:
 
 - **Linux EC2 + strongSwan + FRR** — low-cost emulated CGW for validation
