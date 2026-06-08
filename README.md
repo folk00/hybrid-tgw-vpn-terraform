@@ -1,6 +1,10 @@
 # Hybrid TGW + Site-to-Site VPN (Terraform)
 
 [![CI](https://github.com/folk00/hybrid-tgw-vpn-terraform/actions/workflows/ci.yml/badge.svg)](https://github.com/folk00/hybrid-tgw-vpn-terraform/actions/workflows/ci.yml)
+[![Terraform 1.7](https://img.shields.io/badge/terraform-1.7-7B42BC?logo=terraform&logoColor=white)](https://www.terraform.io/)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![AWS](https://img.shields.io/badge/AWS-TGW%20%2B%20S2S%20VPN-FF9900?logo=amazonaws&logoColor=white)](https://aws.amazon.com/transit-gateway/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Terraform-deployable AWS Advanced Networking lab demonstrating **hybrid connectivity** between an AWS VPC and an on-prem/branch site over **Transit Gateway + Site-to-Site VPN**, with **two interchangeable Customer Gateway implementations**:
 
